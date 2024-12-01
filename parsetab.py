@@ -6,7 +6,7 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'WORDtext : wordswords : words WORD\n             | WORD'
+_lr_signature = 'WORDtext : wordswords : words WORD\n    | WORD'
     
 _lr_action_items = {'WORD':([0,2,3,4,],[3,4,-3,-2,]),'$end':([1,2,3,4,],[0,-1,-3,-2,]),}
 
@@ -27,7 +27,7 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> text","S'",1,None,None,None),
-  ('text -> words','text',1,'p_text','AyaDictionnary.py',87),
-  ('words -> words WORD','words',2,'p_words','AyaDictionnary.py',92),
-  ('words -> WORD','words',1,'p_words','AyaDictionnary.py',93),
+  ('text -> words','text',1,'p_text','AyaDictionnary.py',90),
+  ('words -> words WORD','words',2,'p_words','AyaDictionnary.py',96),
+  ('words -> WORD','words',1,'p_words','AyaDictionnary.py',97),
 ]
