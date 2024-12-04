@@ -1,37 +1,80 @@
-from pydub import AudioSegment
-from pydub.playback import play
+import time
+import pygame
 
-# Dictionary for verses and their timestamps (in seconds)
-timestamps = {
-    "والضحى": (0, 5),
-    "والليل إذا سجى": (5, 12),
-    "ما ودعك ربك وما قلى": (12, 20),
-    "وللآخرة خير لك من الأولى": (20, 28),
-    "ولسوف يعطيك ربك فترضى": (28, 35),
-    "ألم يجدك يتيما فآوى": (35, 42),
-    "ووجدك ضالا فهدى": (42, 50),
-    "ووجدك عائلا فأغنى": (50, 58),
-    "فأما اليتيم فلا تقهر": (58, 65),
-    "وأما السائل فلا تنهر": (65, 72),
-    "وأما بنعمة ربك فحدث": (72, 80),
-}
 
-def play_verse(verse, audio_file):
-    """
-    Play the specific verse from the audio file based on timestamps.
-    :param verse: The verse to play
-    :param audio_file: Path to the audio file
-    """
-    if verse in timestamps:
-        start, end = timestamps[verse]
-        audio = AudioSegment.from_file(audio_file)
-        verse_audio = audio[start * 1000:end * 1000]  # Convert seconds to milliseconds
-        print(f"Playing verse: {verse}")
-        play(verse_audio)
+# 2 -----------------------Add some infos-----------------------
+def verse_infos(user_input, surat_name):
+    # Strip whitespaces from the user input
+    stripped_input = user_input.strip()
+    try:
+        # Find the position of the verse and print it
+        position = surat_name.index(stripped_input) + 1
+        print(f"The position of the verse: '{stripped_input}' is: {position}")
+    except ValueError:
+        # Handle cases where the input does not match any verse
+        print(f"The verse '{stripped_input}' was not found in the Surah.")
+
+
+
+# 3 -----------------------Translation-----------------------
+def translate_verse(verse, language_choice, translation_dict):
+    words = verse.split()  # Split the verse into words
+    translated_words = []
+
+    for word in words:
+        if word in translation_dict:
+            if language_choice == "1":  # French
+                translated_words.append(
+                    translation_dict[word].get("fr", "Translation not available")
+                )
+            elif language_choice == "2":  # English
+                translated_words.append(
+                    translation_dict[word].get("en", "Translation not available")
+                )
+            elif language_choice == "3":  # Holland
+                translated_words.append(
+                    translation_dict[word].get("nl", "Translation not available")
+                )
+            else:
+                return "Invalid language choice."
+        else:
+            translated_words.append(f"[{word}]")  # Handle missing words gracefully
+
+    # Join the translated words into a complete sentence
+    return " ".join(translated_words)
+
+
+
+# 4 -----------------------Play the verse-audio-----------------------
+# Initialize the mixer
+pygame.mixer.init()
+
+
+# Play specific verse
+def play_verse(user_input, verse_timestamps):
+    if user_input in verse_timestamps:
+        start_time, end_time = verse_timestamps[user_input]
+        duration = end_time - start_time
+
+        # Load the audio file
+        pygame.mixer.music.load("doha.mp3")
+        
+        # Start playback from the specified time
+        pygame.mixer.music.play(start=start_time)
+        print(f"Playing verse: '{user_input}' (from {start_time}s to {end_time}s)")
+
+        # Wait for the duration of the verse
+        time.sleep(duration)
+
+        # Stop playback after the verse duration
+        pygame.mixer.music.stop()
+        print("Finished playing the verse.")
     else:
-        print("Verse not found in the timestamps dictionary.")
+        print(f"Verse '{user_input}' not found in timestamps.")
 
-# Example usage
-#user_input = input("Enter the verse: ")
-audio_file_path = "audios/Surah_Doha.m4a"  # Replace with your audio file path
-play_verse(user_input, audio_file_path)
+# ---Example usage
+# user_input = "والليل إذا سجى".strip()
+# play_verse(user_input, verse_timestamps)
+
+# ---Quit the mixer after playback
+# pygame.mixer.quit()
