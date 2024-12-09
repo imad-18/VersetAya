@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'WORDtext : wordswords : words WORD\n    | WORD'
+_lr_signature = 'FIFTH FIRST FOURTH SECOND SEVENTH SIXTH THIRD\n    ayah : FIRST\n         | FIRST SECOND\n         | FIRST SECOND THIRD\n         | FIRST SECOND THIRD FOURTH\n         | FIRST SECOND THIRD FOURTH FIFTH\n         | FIRST SECOND THIRD FOURTH FIFTH SIXTH\n         | FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH\n    '
     
-_lr_action_items = {'WORD':([0,2,3,4,],[3,4,-3,-2,]),'$end':([1,2,3,4,],[0,-1,-3,-2,]),}
+_lr_action_items = {'FIRST':([0,],[2,]),'$end':([1,2,3,4,5,6,7,8,],[0,-1,-2,-3,-4,-5,-6,-7,]),'SECOND':([2,],[3,]),'THIRD':([3,],[4,]),'FOURTH':([4,],[5,]),'FIFTH':([5,],[6,]),'SIXTH':([6,],[7,]),'SEVENTH':([7,],[8,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'text':([0,],[1,]),'words':([0,],[2,]),}
+_lr_goto_items = {'ayah':([0,],[1,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -26,8 +26,12 @@ for _k, _v in _lr_goto_items.items():
        _lr_goto[_x][_k] = _y
 del _lr_goto_items
 _lr_productions = [
-  ("S' -> text","S'",1,None,None,None),
-  ('text -> words','text',1,'p_text','AyaDictionnary.py',90),
-  ('words -> words WORD','words',2,'p_words','AyaDictionnary.py',96),
-  ('words -> WORD','words',1,'p_words','AyaDictionnary.py',97),
+  ("S' -> ayah","S'",1,None,None,None),
+  ('ayah -> FIRST','ayah',1,'p_ayah','app.py',79),
+  ('ayah -> FIRST SECOND','ayah',2,'p_ayah','app.py',80),
+  ('ayah -> FIRST SECOND THIRD','ayah',3,'p_ayah','app.py',81),
+  ('ayah -> FIRST SECOND THIRD FOURTH','ayah',4,'p_ayah','app.py',82),
+  ('ayah -> FIRST SECOND THIRD FOURTH FIFTH','ayah',5,'p_ayah','app.py',83),
+  ('ayah -> FIRST SECOND THIRD FOURTH FIFTH SIXTH','ayah',6,'p_ayah','app.py',84),
+  ('ayah -> FIRST SECOND THIRD FOURTH FIFTH SIXTH SEVENTH','ayah',7,'p_ayah','app.py',85),
 ]
