@@ -8,7 +8,7 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-import pyttsx3
+import streamlit as st
 
 
 
@@ -258,18 +258,20 @@ def verse_infos(user_input, surat_name, Tafssir):
         position = surat_name.index(user_input) + 1
         # print(f"The position of the verse: '{stripped_input}' ( {position})")
         # Reshape and display Arabic text for the result
-        infos = f""" ------معلومات عن الاية -------
+        infos = f"""
         الاية رقم {position} 
         سورة الضحى
         {Tafssir[position-1]}
         """
-
         reshaped_text = arabic_reshaper.reshape(infos)
         bidi_text = get_display(reshaped_text)
-        print(bidi_text)
+        # print(bidi_text)
+        return infos
     except ValueError:
         # Handle cases where the input does not match any verse
-        print(f"The verse '{stripped_input}' was not found in the Surah.")
+        # print(f"The verse '{stripped_input}' was not found in the Surah.")
+        return f"The verse '{stripped_input}' was not found in the Surah."
+
 
 
 # 3 -----------------------Translation-----------------------
@@ -312,7 +314,7 @@ def play_verse(user_input, verse_timestamps):
         duration = end_time - start_time
 
         # Load the audio file
-        pygame.mixer.music.load("doha.mp3")
+        pygame.mixer.music.load("audios/doha.mp3")
 
         # Start playback from the specified time
         pygame.mixer.music.play(start=start_time)
@@ -353,15 +355,20 @@ def play_verse(user_input, verse_timestamps):
 
 
 # 5 -----------------------Play the verse-translation-V2-----------------------
-from gtts import gTTS
-import os
+# from gtts import gTTS
+# import os
 
-def play_translation(text, language="en"):
-    # Convert text to speech
-    tts = gTTS(text=text, lang=language)
-    tts.save("translation.mp3")  # Save the audio file
-    os.system("start translation.mp3")  # Play the audio file (use 'start' on Windows, 'open' on macOS, or 'xdg-open' on Linux)
+# def play_translation(text, language="en"):
+#     # Convert text to speech
+#     tts = gTTS(text=text, lang=language)
+#     tts.save("translation.mp3")  # Save the audio file
+#     os.system("start translation.mp3")  # Play the audio file (use 'start' on Windows, 'open' on macOS, or 'xdg-open' on Linux)
 
-# Example usage
-translation_text = "In the name of Allah, the Most Gracious, the Most Merciful"
-play_translation(translation_text, language="en")
+# # Example usage
+# translation_text = "In the name of Allah, the Most Gracious, the Most Merciful"
+# play_translation(translation_text, language="en")
+
+
+# ------- GUI ------------
+
+
