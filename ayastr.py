@@ -1,6 +1,7 @@
 import ply.yacc as yacc
 import ply.lex as lex
 from usefull_functions import *
+import Levenshtein
 
 import sys
 import arabic_reshaper
@@ -11,6 +12,11 @@ import streamlit as st
 # Ensure UTF-8 encoding is used
 sys.stdout.reconfigure(encoding="utf-8")
 
+
+# ----------------------------------------
+# LEX
+# ----------------------------------------
+
 # Tokens declaration: Position-based tokens for each word in the Ayat
 tokens = ["FIRST", "SECOND", "THIRD", "FOURTH", "FIFTH", "SIXTH", "SEVENTH"]
 
@@ -18,37 +24,30 @@ tokens = ["FIRST", "SECOND", "THIRD", "FOURTH", "FIFTH", "SIXTH", "SEVENTH"]
 t_ignore = " \t\n"
 
 # Words of the Surah based on their positions
-t_FIRST = r"والضحى|والليل|ما|وللآخرة|ولسوف|ألم|ووجدك|فأما|وأما|بِسْمِ|الْحَمْدُ|الرَّحْمَنِ|مَالِكِ|إِيَّاكَ|اهْدِنَا|صِرَاطَ|غَيْرِ"
-t_SECOND = r"إذا|ودعك|خير|يعطيك|يجدك|ضالا|اليتيم|السائل|بنعمة|اللَّهِ|لِلَّهِ|الرَّحِيمِ|يَوْمِ|نَعْبُدُ|الصِّرَاطَ|الَّذِينَ|الْمَغْضُوبِ"
+t_FIRST = r"والضحى|والليل|ما|وللآخرة|ولسوف|ألم|ووجدك|فأما|وأما|بسم|الحمد|الرحمن|مالك|إياك|اهدنا|صراط|غير"
+t_SECOND = r"إذا|ودعك|خير|يعطيك|يجدك|ضالا|اليتيم|السائل|بنعمة|الله|لله|الرحيم|يوم|نعبد|الصراط|الذين|المغضوب"
 t_THIRD = (
-    r"سجى|ربك|لك|يتيما|فهدى|فلا|ربك|الرَّحْمَنِ|رَبِّ|الرَّحِيمِ|الدِّينِ|وَإِيَّاكَ|مُسْتَقِيمَ|أَنْعَمْتَ|عَلَيْهِمْ"
+    r"سجى|ربك|لك|يتيما|فهدى|فلا|ربك|الرحمن|رب|الرحيم|الدين|وإياك|مستقيم|أنعمت|عليهم"
 )
-t_FOURTH = r"وما|من|ترضى|فآوى|فهدى|تقهر|تنهر|فحدث|الرَّحِيمِ|الْعَالَمِينَ"
-t_FIFTH = r"قلى|الأولى|فأغنى|مَالِكِ|يَوْمِ|الدِّينِ"
-t_SIXTH = r"فهدى|إِيَّاكَ|نَعْبُدُ|وَإِيَّاكَ|نَسْتَعِينُ"
-t_SEVENTH = r"فأغنى|اهْدِنَا|الصِّرَاطَ|الْمُسْتَقِيمَ"
+t_FOURTH = r"وما|من|ترضى|فآوى|فهدى|تقهر|تنهر|فحدث|الرحيم|العالمين"
+t_FIFTH = r"قلى|الأولى|فأغنى|مالك|يوم|الدين"
+t_SIXTH = r"فهدى|إياك|نعبد|وإياك|نستعين"
+t_SEVENTH = r"فأغنى|اهدنا|الصراط|المستقيم"
 
 
 # Error handling
 def t_error(t):
-    print(f"Illegal character '{t.value[0]}'")
+    print(f"Erreur lexical: Le caractère '{t.value[0]}' n'est pas reconnu à la position {t.lexpos}")
+    st.error(f"Erreur lexical: Le caractère '{t.value[0]}' n'est pas reconnu à la position {t.lexpos}")
     t.lexer.skip(1)
 
 
 # Build the lexer
 lexer = lex.lex()
 
-# Predefined Ayat of Surat Ad-Duha , Surah Al-Fatiha
-
-
 # ----------------------------------------
 # YACC: Grammar Rules
 # ----------------------------------------
-
-
-# Helper functions
-def validate_verse(verse, surah):
-    return verse in surah
 
 
 # Parsing rules
@@ -68,7 +67,17 @@ def p_ayah(p):
         if p[0] not in valid_ayat1 and valid_ayat2:
             resh = arabic_reshaper.reshape(p[0])
             resh = get_display(resh)
-            st.error(f"Invalid Ayah: {p[0]}")
+            st.error(f"Erreur Semantique : Incomplete or invalide Ayah: {p[0]}")
+            suggestion , distance = suggest_ayat(p[0],valid_ayat1,valid_ayat2)
+            st.info(f"هل كنت تقصد : {suggestion}")
+             # "Oui" Button Logic
+            if st.button("Oui"):
+                st.session_state["data"] = suggestion  # Update session state with suggestion
+                st.rerun()  # Force rerun to reflect the change
+            
+            # "Non" Button Logic
+            if st.button("Non"):
+                st.warning("Veuillez réessayer ou saisir l'Ayah correcte.")
         else:
             resh = arabic_reshaper.reshape(p[0])
             resh = get_display(resh)
@@ -160,19 +169,43 @@ def p_ayah(p):
         else:
             print("Audio playback skipped.")
 
+def p_error(p):
+    if p is None:
+        print("Erreur syntaxique: fin du texte inattendue")
+        st.error("Erreur syntaxique: fin du texte inattendue")
+    else:
+        print(f"Erreur syntaxique dans le token '{p.value}' à la position {p.lexpos}")
+        st.error(f"Erreur syntaxique: Le token '{p.value}' n'est pas valide à la position {p.lexpos}")
+        closest_ayat, distance = suggest_ayat(p.value, valid_ayat1, valid_ayat2)
+        st.info(f"هل كنت تقصد: {closest_ayat}")
 
 # Build the parser
 parser = yacc.yacc()
 
-
-def p_error(p):
-    print("Syntax error in input!")
+# ----------------------------------------
+# AUTRE FONCTIONS
+# ----------------------------------------
+def suggest_ayat(user_input, valid_ayat1,valid_ayat2):
+    closest_ayat = None
+    min_distance = float('inf')
+    allAyat = valid_ayat1 + valid_ayat2
+    for ayat in allAyat :
+        # Calcule la distance de Levenshtein entre l'entrée de l'utilisateur et chaque verset
+        distance = Levenshtein.distance(user_input, ayat)
+        
+        # Si la distance est plus petite que celle trouvée précédemment, on met à jour la suggestion
+        if distance < min_distance and user_input in ayat : 
+            min_distance = distance
+            closest_ayat = ayat
+    
+    return closest_ayat, min_distance
 
 
 # ----------------------------------------
-# Test Input: Full Surat Ad-Duha
+# Interface
 # ----------------------------------------
 # Inject custom CSS for better alignment
+
 st.markdown(
     """
     <style>
@@ -214,11 +247,12 @@ with col2:
     validate_button = st.button("Validate")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# data = st.text_input("Enter your Ayah here:")
+# ----------------------------------------
+# Test Input: 
+# ----------------------------------------
 
 lexer.input(data)
-
-# Parse each Ayah
+# Verification de Ayah (yacc)
 for line in data.split("\n"):
     if line.strip():
         print(f"\nParsing: {get_display(arabic_reshaper.reshape(line.strip()))}")
